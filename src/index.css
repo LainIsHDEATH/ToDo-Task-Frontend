@@ -123,3 +123,35 @@ a {
   border: 1px solid #ddd;
   background: white;
 }
+
+.form {
+  display: grid;
+  gap: 16px;
+  max-width: 420px;
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+}
+
+.form-field label {
+  font-weight: 600;
+}
+
+.form-field input {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.field-error {
+  color: #b42318;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+}

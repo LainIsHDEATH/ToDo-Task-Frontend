@@ -6,6 +6,13 @@ export interface UserResponse {
     role?: string
 }
 
+export interface RegisterUserRequest {
+    firstName: string
+    lastName: string
+    email: string
+    password: string
+}
+
 export interface PageResponse<T> {
     content: T[]
     page?: number

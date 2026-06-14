@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { UpdateUserPage } from './pages/UpdateUserPage'
 import { UsersPage } from './pages/UsersPage'
+import { UserTasksPage } from './pages/UserTasksPage'
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                 <Route path={ROUTES.users} element={<UsersPage />} />
                 <Route path={ROUTES.createUser} element={<CreateUserPage />} />
                 <Route path="/users/:userId/edit" element={<UpdateUserPage />} />
+                <Route path="/users/:userId/tasks" element={<UserTasksPage />} />
                 <Route path="/404" element={<NotFoundPage />} />
                 <Route path="*" element={<Navigate to="/404" replace />} />
             </Route>
