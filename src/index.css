@@ -52,3 +52,74 @@ a {
   width: 220px;
   height: auto;
 }
+
+.nav-link.active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.button {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  color: #172033;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button.primary {
+  background: #172033;
+  color: white;
+}
+
+.button.danger {
+  color: #b42318;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.error-state {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #f3b4b4;
+  background: #fff1f1;
+  color: #b42318;
+}
+
+.loading-state,
+.empty-state {
+  padding: 16px;
+  border: 1px solid #ddd;
+  background: white;
+}
