@@ -33,15 +33,30 @@ export function resolveApiErrorMessage(cause: unknown): string {
     return 'Unexpected error occurred.'
 }
 
+export function resolveApiFieldErrors(cause: unknown): Record<string, string> {
+    if (!axios.isAxiosError(cause)) {
+        return {}
+    }
+
+    const responseData = cause.response?.data
+
+    if (!isRecord(responseData)) {
+        return {}
+    }
+
+    return (
+        extractFieldErrors(responseData.fieldErrors) ??
+        extractFieldErrors(responseData.errors) ??
+        extractFieldErrors(responseData.validationErrors) ??
+        {}
+    )
+}
+
 function resolveAxiosErrorMessage(cause: AxiosError): string {
     const responseData = cause.response?.data
 
-    if (typeof responseData === 'object' && responseData !== null && 'message' in responseData) {
-        const message = responseData.message
-
-        if (typeof message === 'string' && message.trim().length > 0) {
-            return message
-        }
+    if (isRecord(responseData) && typeof responseData.message === 'string') {
+        return responseData.message
     }
 
     if (typeof responseData === 'string' && responseData.trim().length > 0) {
@@ -53,4 +68,47 @@ function resolveAxiosErrorMessage(cause: AxiosError): string {
     }
 
     return 'Backend is not available.'
+}
+
+function extractFieldErrors(value: unknown): Record<string, string> | null {
+    if (isRecord(value)) {
+        const errors: Record<string, string> = {}
+
+        for (const [field, message] of Object.entries(value)) {
+            if (typeof message === 'string' && message.trim().length > 0) {
+                errors[field] = message
+            }
+        }
+
+        return Object.keys(errors).length > 0 ? errors : null
+    }
+
+    if (Array.isArray(value)) {
+        const errors: Record<string, string> = {}
+
+        for (const item of value) {
+            if (!isRecord(item)) {
+                continue
+            }
+
+            const field = item.field
+            const message = item.message
+
+            if (
+                typeof field === 'string' &&
+                typeof message === 'string' &&
+                message.trim().length > 0
+            ) {
+                errors[field] = message
+            }
+        }
+
+        return Object.keys(errors).length > 0 ? errors : null
+    }
+
+    return null
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null
 }

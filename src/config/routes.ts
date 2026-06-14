@@ -3,6 +3,7 @@ export const ROUTES = {
     users: '/users',
     createUser: '/users/new',
     editUser: (userId: number | string) => `/users/${userId}/edit`,
+    userTasks: (userId: number | string) => `/users/${userId}/tasks`,
 } as const
 
 export const NAV_ITEMS = [
