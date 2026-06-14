@@ -1,28 +1,31 @@
-import type { ReactNode } from 'react'
+import { NavLink, Outlet } from 'react-router-dom'
 import { NAV_ITEMS, ROUTES } from '../../config/routes'
 
-interface AppLayoutProps {
-    children: ReactNode
-}
-
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout() {
     return (
         <div className="app-shell">
             <header className="app-header">
-                <a className="logo-link" href={ROUTES.home}>
+                <NavLink className="logo-link" to={ROUTES.home}>
                     Tasks
-                </a>
+                </NavLink>
 
                 <nav className="main-navigation" aria-label="Main navigation">
                     {NAV_ITEMS.map((item) => (
-                        <a key={item.path} className="nav-link" href={item.path}>
+                        <NavLink
+                            key={item.path}
+                            className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+                            to={item.path}
+                            end={item.path === ROUTES.home}
+                        >
                             {item.label}
-                        </a>
+                        </NavLink>
                     ))}
                 </nav>
             </header>
 
-            <main className="app-main">{children}</main>
+            <main className="app-main">
+                <Outlet />
+            </main>
         </div>
     )
 }
