@@ -1,10 +1,12 @@
+import { AppLayout } from './components/layout/AppLayout'
+import { HomePage } from './pages/HomePage'
+
 function App() {
-  return (
-      <main>
-        <h1>Tasks Frontend</h1>
-        <p>Frontend architecture is documented in docs/frontend/architecture.md.</p>
-      </main>
-  )
+    return (
+        <AppLayout>
+            <HomePage />
+        </AppLayout>
+    )
 }
 
 export default App
