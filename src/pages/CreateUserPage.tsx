@@ -31,10 +31,16 @@ export function CreateUserPage() {
 
     const registerUserMutation = useMutation({
         mutationFn: registerUser,
-        onSuccess: async (createdUser) => {
+        onSuccess: async (_, variables) => {
             await queryClient.invalidateQueries({ queryKey: ['users'] })
 
-            navigate(ROUTES.userTasks(createdUser.id))
+            navigate(ROUTES.login, {
+                replace: true,
+                state: {
+                    registrationSuccess: true,
+                    email: variables.email,
+                },
+            })
         },
         onError: (cause) => {
             const fieldErrors = resolveApiFieldErrors(cause)
