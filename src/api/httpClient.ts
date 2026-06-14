@@ -1,8 +1,7 @@
 import axios, { AxiosError } from 'axios'
+import { getAccessToken } from '../auth/authTokenStorage'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
-
-const ACCESS_TOKEN_STORAGE_KEY = 'todoTasksAccessToken'
 
 export const httpClient = axios.create({
     baseURL: API_BASE_URL,
@@ -12,7 +11,7 @@ export const httpClient = axios.create({
 })
 
 httpClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY)
+    const token = getAccessToken()
 
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
