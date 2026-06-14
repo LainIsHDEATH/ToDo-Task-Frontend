@@ -1,39 +1,14 @@
 # Frontend Architecture
 
-This document covers the initial frontend planning tasks:
+## Frontend Architecture
 
-- FE-TASK-00-01 — Decide Frontend Architecture
-- FE-TASK-00-02 — Define Frontend Project Structure
-- FE-TASK-00-03 — Align Frontend Choice with Backend Security
-- FE-TASK-00-04 — Confirm Required Frontend Pages
+The selected frontend approach is:
 
-## FE-TASK-00-01 — Frontend Architecture Decision
+```text
+React + TypeScript
+```
 
-The selected frontend approach is **React**.
-
-The frontend is implemented as a standalone client application rather than server-rendered Thymeleaf templates.
-
-### Decision
-
-Use:
-
-- React
-- TypeScript
-- Vite
-
-### Reasoning
-
-React is selected because the backend already exposes REST API endpoints and uses stateless JWT authentication. A separate frontend client fits this backend architecture better than Thymeleaf because the UI can communicate with the backend through HTTP API calls and can be developed independently from the Spring Boot application.
-
-TypeScript is selected because the project is already initialized as React + TypeScript and frontend code will work with backend DTO-like request and response objects.
-
-Vite is selected because it provides a simple React development setup with fast local development and minimal configuration.
-
-## FE-TASK-00-02 — Planned Project Structure
-
-The frontend project is located at the repository root because this repository is dedicated to the frontend only.
-
-Planned structure:
+## Planned structure
 
 ```text
 .
@@ -57,37 +32,53 @@ Planned structure:
 
 ### Directory responsibilities
 
-| Directory | Responsibility |
-| --- | --- |
-| `src/api` | Backend API client functions and centralized request handling. |
-| `src/components` | Reusable UI components. |
-| `src/components/layout` | Shared application layout, menu, and page shell. |
-| `src/config` | Route constants and frontend configuration. |
-| `src/pages` | Page-level components. |
-| `src/types` | Shared TypeScript types used by frontend code. |
+| Directory               | Responsibility                                                 |
+| ----------------------- | -------------------------------------------------------------- |
+| `docs/frontend`         | Frontend planning and architecture documentation.              |
+| `src/api`               | Backend API client functions and centralized request handling. |
+| `src/components`        | Reusable UI components.                                        |
+| `src/components/layout` | Shared application layout, menu, and page shell.               |
+| `src/config`            | Route constants and frontend configuration.                    |
+| `src/pages`             | Page-level components.                                         |
+| `src/types`             | Shared TypeScript types used by frontend code.                 |
 
-This structure should remain simple and should not introduce unnecessary abstractions before the application needs them.
+### Structure rules
 
-## FE-TASK-00-03 — Backend Security Alignment
+The structure should stay simple. No unnecessary abstractions should be introduced before they are needed.
+
+Recommended early structure:
+
+```text
+src/
+├── api/
+├── components/
+├── config/
+├── pages/
+└── types/
+```
+
+## Aligned Frontend Choice with Backend Security
 
 The selected frontend approach is React, so the frontend communicates with the backend through REST API calls.
 
-### Authentication strategy
+### The selected authentication strategy is:
 
-The selected authentication strategy is **JWT Bearer authentication**.
-
-Expected flow:
-
-1. User submits email and password on the frontend login page.
-2. Frontend sends credentials to the backend login endpoint.
-3. Backend returns a JWT access token.
-4. Frontend stores the token on the client side.
-5. Frontend sends authenticated requests with the `Authorization` header.
+```text
+JWT Bearer authentication
+```
 
 Header format:
 
 ```text
 Authorization: Bearer <token>
+```
+
+### Token storage
+
+Initial planned token storage:
+
+```text
+localStorage
 ```
 
 ### CORS
@@ -110,36 +101,51 @@ http://localhost:8080
 
 CSRF protection is not required for stateless JWT API requests when the backend does not use server-side sessions for authentication.
 
-If the authentication approach changes to cookie-based sessions later, CSRF handling must be reviewed again.
+### Backend security impact
 
-## FE-TASK-00-04 — Required Frontend Pages
+For the React frontend, the backend should support:
 
-Required pages:
+* public login endpoint;
+* public registration endpoint if registration remains open;
+* protected user/task endpoints;
+* JWT Bearer token authentication;
+* CORS configuration for the frontend origin.
 
-| Page | Planned route |
-| --- | --- |
-| Home page | `/` |
-| Users page | `/users` |
-| Create New User page | `/users/new` |
-| Update Existing User page | `/users/:userId/edit` |
-| User Tasks page | `/users/:userId/tasks` |
-| Create New Task page | `/users/:userId/tasks/new` |
-| Update Task page | `/tasks/:taskId/edit` |
+## Confirm Required Frontend Pages
 
-Supporting page:
+The required frontend pages are listed below.
 
-| Page | Planned route |
-| --- | --- |
-| Login page | `/login` |
+| Page                      | Planned route              | Purpose                                               |
+| ------------------------- | -------------------------- | ----------------------------------------------------- |
+| Home page                 | `/`                        | Landing page with application title, text, and image. |
+| Users page                | `/users`                   | Display registered users in a table.                  |
+| Create New User page      | `/users/new`               | Create a new user.                                    |
+| Update Existing User page | `/users/:userId/edit`      | Update an existing user.                              |
+| User Tasks page           | `/users/:userId/tasks`     | Display tasks owned by a selected user.               |
+| Create New Task page      | `/users/:userId/tasks/new` | Create a task for a selected user.                    |
+| Update Task page          | `/tasks/:taskId/edit`      | Update an existing task.                              |
+
+### Additional page
+
+| Page       | Planned route | Purpose                                  |
+| ---------- | ------------- | ---------------------------------------- |
+| Login page | `/login`      | Authenticate user and receive JWT token. |
 
 ### Required shared UI elements
 
 The frontend must include:
 
-- menu on all pages
-- logo link to Home
-- Home link to Home
+* menu on all pages;
+* logo link to Home;
+* Home link to Home.
 
-## Scope of this document
+### Planned navigation
 
-This document defines the frontend direction and planned structure only. It does not implement the actual pages, forms, API integration, or styling tasks.
+Initial menu items:
+
+| Menu item | Route    |
+| --------- | -------- |
+| Logo      | `/`      |
+| Home      | `/`      |
+| Users     | `/users` |
+| Login     | `/login` |
