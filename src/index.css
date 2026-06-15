@@ -176,3 +176,17 @@ a {
   background: #f0fff4;
   color: #166534;
 }
+
+.form-field select {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font: inherit;
+  background: white;
+}
+
+.form-field input:disabled {
+  background: #f3f4f6;
+  color: #667085;
+  cursor: not-allowed;
+}
