@@ -5,6 +5,9 @@ export const ROUTES = {
     createUser: '/users/new',
     editUser: (userId: number | string) => `/users/${userId}/edit`,
     userTasks: (userId: number | string) => `/users/${userId}/tasks`,
+    createTask: (userId: number | string) => `/users/${userId}/tasks/new`,
+    editTask: (userId: number | string, taskId: number | string) =>
+        `/users/${userId}/tasks/${taskId}/edit`,
 } as const
 
 export const NAV_ITEMS = [

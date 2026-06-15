@@ -190,3 +190,9 @@ a {
   color: #667085;
   cursor: not-allowed;
 }
+
+.page-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
