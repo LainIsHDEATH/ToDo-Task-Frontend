@@ -1,10 +1,13 @@
 export type UserRole = 'USER' | 'ADMIN'
 
-export interface UserResponse {
+export interface UserShortResponse {
     id: number
     firstName: string
     lastName: string
     email: string
+}
+
+export interface UserResponse extends UserShortResponse {
     role: UserRole
 }
 
