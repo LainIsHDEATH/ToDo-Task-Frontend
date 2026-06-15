@@ -1,6 +1,10 @@
 import { httpClient } from './httpClient'
 import type { PageResponse } from '../types/user'
-import type { TaskListItemResponse } from '../types/task'
+import type {
+    CreateTaskRequest,
+    TaskListItemResponse,
+    TaskResponse,
+} from '../types/task'
 
 type TasksApiResponse = PageResponse<TaskListItemResponse> | TaskListItemResponse[]
 
@@ -12,6 +16,15 @@ export async function fetchUserTasks(userId: number): Promise<TaskListItemRespon
     }
 
     return response.data.content
+}
+
+export async function createTask(userId: number, request: CreateTaskRequest): Promise<TaskResponse> {
+    const response = await httpClient.post<TaskResponse>(
+        `/api/admin/users/${userId}/tasks`,
+        request,
+    )
+
+    return response.data
 }
 
 export async function removeTask(taskId: number): Promise<void> {
