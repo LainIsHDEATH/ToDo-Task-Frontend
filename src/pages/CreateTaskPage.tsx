@@ -1,17 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useParams } from 'react-router-dom'
-import { resolveApiErrorMessage } from '../api/httpClient'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import {resolveApiErrorMessage, resolveApiFieldErrors} from '../api/httpClient'
+import { createTask } from '../api/tasksApi'
 import { fetchUsers } from '../api/usersApi'
 import { ROUTES } from '../config/routes'
-import {
-    createTaskSchema,
-    TASK_PRIORITIES,
-    type CreateTaskFormValues,
-} from '../schemas/taskSchemas'
-import type { TaskPriority } from '../types/task'
+import {createTaskSchema, TASK_PRIORITIES, type CreateTaskFormValues} from '../schemas/taskSchemas'
+import type { CreateTaskRequest, TaskPriority } from '../types/task'
 import type { UserResponse } from '../types/user'
 
 const DEFAULT_FORM_VALUES: CreateTaskFormValues = {
@@ -24,12 +21,18 @@ export function CreateTaskPage() {
     const userIdNumber = Number(userId)
     const isValidUserId = Number.isInteger(userIdNumber) && userIdNumber > 0
 
+    const navigate = useNavigate()
+    const queryClient = useQueryClient()
+
     const [selectedCollaboratorId, setSelectedCollaboratorId] = useState('')
     const [selectedCollaborators, setSelectedCollaborators] = useState<UserResponse[]>([])
     const [collaboratorError, setCollaboratorError] = useState<string | null>(null)
 
     const {
         register,
+        handleSubmit,
+        reset,
+        setError,
         formState: { errors },
     } = useForm<CreateTaskFormValues>({
         resolver: zodResolver(createTaskSchema),
@@ -45,6 +48,30 @@ export function CreateTaskPage() {
         queryKey: ['users'],
         queryFn: fetchUsers,
         enabled: isValidUserId,
+    })
+
+    const createTaskMutation = useMutation({
+        mutationFn: (request: CreateTaskRequest) => createTask(userIdNumber, request),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['users', userIdNumber, 'tasks'],
+            })
+
+            navigate(ROUTES.userTasks(userIdNumber))
+        },
+        onError: (cause) => {
+            const fieldErrors = resolveApiFieldErrors(cause)
+
+            for (const [field, message] of Object.entries(fieldErrors)) {
+                if (isCreateTaskField(field)) {
+                    setError(field, { message })
+                }
+
+                if (field === 'collaboratorIds') {
+                    setCollaboratorError(message)
+                }
+            }
+        },
     })
 
     const availableCollaborators = users.filter(
@@ -93,6 +120,24 @@ export function CreateTaskPage() {
         setCollaboratorError(null)
     }
 
+    function onSubmit(values: CreateTaskFormValues) {
+        setCollaboratorError(null)
+
+        createTaskMutation.mutate({
+            name: values.name,
+            priority: values.priority,
+            collaboratorIds: selectedCollaborators.map((collaborator) => collaborator.id),
+        })
+    }
+
+    function handleClear() {
+        reset(DEFAULT_FORM_VALUES)
+        setSelectedCollaboratorId('')
+        setSelectedCollaborators([])
+        setCollaboratorError(null)
+        createTaskMutation.reset()
+    }
+
     if (!isValidUserId) {
         return (
             <section>
@@ -124,7 +169,13 @@ export function CreateTaskPage() {
                 <div className="error-state">{resolveApiErrorMessage(usersError)}</div>
             )}
 
-            <form className="form" noValidate>
+            {createTaskMutation.error && (
+                <div className="error-state">
+                    {resolveApiErrorMessage(createTaskMutation.error)}
+                </div>
+            )}
+
+            <form className="form" onSubmit={handleSubmit(onSubmit)} noValidate>
                 <div className="form-field">
                     <label htmlFor="name">Name</label>
                     <input id="name" type="text" {...register('name')} />
@@ -159,7 +210,10 @@ export function CreateTaskPage() {
                             <select
                                 aria-label="Collaborator"
                                 value={selectedCollaboratorId}
-                                disabled={availableCollaborators.length === 0}
+                                disabled={
+                                    availableCollaborators.length === 0 ||
+                                    createTaskMutation.isPending
+                                }
                                 onChange={(event) => {
                                     setSelectedCollaboratorId(event.target.value)
                                     setCollaboratorError(null)
@@ -177,7 +231,7 @@ export function CreateTaskPage() {
                             <button
                                 className="button"
                                 type="button"
-                                disabled={!selectedCollaboratorId}
+                                disabled={!selectedCollaboratorId || createTaskMutation.isPending}
                                 onClick={handleAddCollaborator}
                             >
                                 Add Collaborator
@@ -202,6 +256,7 @@ export function CreateTaskPage() {
                                     <button
                                         className="button danger"
                                         type="button"
+                                        disabled={createTaskMutation.isPending}
                                         onClick={() => handleRemoveCollaborator(collaborator.id)}
                                     >
                                         Remove
@@ -211,6 +266,29 @@ export function CreateTaskPage() {
                         </ul>
                     )}
                 </section>
+
+                <div className="form-actions">
+                    <button
+                        className="button primary"
+                        type="submit"
+                        disabled={createTaskMutation.isPending}
+                    >
+                        {createTaskMutation.isPending ? 'Creating...' : 'Create'}
+                    </button>
+
+                    <button
+                        className="button"
+                        type="button"
+                        disabled={createTaskMutation.isPending}
+                        onClick={handleClear}
+                    >
+                        Clear
+                    </button>
+
+                    <Link className="button" to={ROUTES.userTasks(userIdNumber)}>
+                        Go to Task List
+                    </Link>
+                </div>
             </form>
         </section>
     )
@@ -224,4 +302,8 @@ function formatUserOption(user: UserResponse): string {
     }
 
     return `${fullName} (${user.email})`
+}
+
+function isCreateTaskField(field: string): field is keyof CreateTaskFormValues {
+    return ['name', 'priority'].includes(field)
 }

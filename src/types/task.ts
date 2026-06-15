@@ -8,3 +8,16 @@ export interface TaskListItemResponse {
     priority: TaskPriority
     status: TaskStatus
 }
+
+export interface TaskResponse {
+    id: number
+    name: string
+    priority: TaskPriority
+    status: TaskStatus
+}
+
+export interface CreateTaskRequest {
+    name: string
+    priority: TaskPriority
+    collaboratorIds: number[]
+}
