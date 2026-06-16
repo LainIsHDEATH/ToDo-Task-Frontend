@@ -44,7 +44,7 @@ export function LoginPage() {
         onSuccess: async (response) => {
             auth.login(response.accessToken)
 
-            await queryClient.invalidateQueries()
+            await queryClient.invalidateQueries({ queryKey: ['currentUser'] })
 
             navigate(resolveRedirectPath(locationState), { replace: true })
         },
