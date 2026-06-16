@@ -99,7 +99,7 @@ export function UpdateUserPage() {
 
                 <div className="error-state">Invalid user id.</div>
 
-                <Link className="button" to={ROUTES.users}>
+                <Link className="button" to={ROUTES.adminUsers}>
                     Back to Users
                 </Link>
             </section>
@@ -114,7 +114,7 @@ export function UpdateUserPage() {
                     <p>Edit existing user details.</p>
                 </div>
 
-                <Link className="button" to={ROUTES.users}>
+                <Link className="button" to={ROUTES.adminUsers}>
                     Back to Users
                 </Link>
             </div>

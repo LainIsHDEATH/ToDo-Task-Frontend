@@ -69,11 +69,11 @@ export function UsersPage() {
                             <td>{getFullName(user)}</td>
                             <td>{user.email}</td>
                             <td className="actions-cell">
-                                <Link className="button" to={ROUTES.userTasks(user.id)}>
+                                <Link className="button" to={ROUTES.adminUserTasks(user.id)}>
                                     Tasks
                                 </Link>
 
-                                <Link className="button" to={ROUTES.editUser(user.id)}>
+                                <Link className="button" to={ROUTES.adminEditUser(user.id)}>
                                     Edit
                                 </Link>
 

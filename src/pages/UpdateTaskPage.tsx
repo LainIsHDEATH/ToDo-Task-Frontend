@@ -204,7 +204,10 @@ export function UpdateTaskPage() {
 
                 <div className="error-state">Invalid route parameters.</div>
 
-                <Link className="button" to={isValidUserId ? ROUTES.userTasks(userIdNumber) : ROUTES.users}>
+                <Link
+                    className="button"
+                    to={isValidUserId ? ROUTES.adminUserTasks(userIdNumber) : ROUTES.adminUsers}
+                >
                     Back to Tasks
                 </Link>
             </section>
@@ -221,7 +224,7 @@ export function UpdateTaskPage() {
                     </p>
                 </div>
 
-                <Link className="button" to={ROUTES.userTasks(userIdNumber)}>
+                <Link className="button" to={ROUTES.adminUserTasks(userIdNumber)}>
                     Back to Tasks
                 </Link>
             </div>
@@ -374,7 +377,7 @@ export function UpdateTaskPage() {
                             Clear
                         </button>
 
-                        <Link className="button" to={ROUTES.userTasks(userIdNumber)}>
+                        <Link className="button" to={ROUTES.adminUserTasks(userIdNumber)}>
                             Go to Task List
                         </Link>
                     </div>
