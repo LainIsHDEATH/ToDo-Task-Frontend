@@ -11,19 +11,16 @@ import { fetchAdminTaskById, updateAdminTask } from '../api/adminTasksApi'
 import { fetchUserCatalog } from '../api/userApi'
 import { ROUTES } from '../config/routes'
 import {
-    TASK_PRIORITIES,
-    TASK_STATUSES,
     type UpdateTaskFormValues,
     updateTaskSchema,
 } from '../schemas/taskSchemas'
 import type {
-    TaskPriority,
     TaskResponse,
-    TaskStatus,
     UpdateTaskRequest,
 } from '../types/task'
 import type { UserShortResponse } from '../types/user'
-
+import { CollaboratorSelector } from '../components/tasks/CollaboratorSelector'
+import { TaskForm } from '../components/tasks/TaskForm'
 const DEFAULT_FORM_VALUES: UpdateTaskFormValues = {
     name: '',
     priority: 'LOW',
@@ -127,52 +124,6 @@ export function AdminUpdateUserTaskPage() {
 
     const ownerId = task?.owner.id ?? userIdNumber
 
-    const availableCollaborators = users.filter(
-        (user) =>
-            user.id !== ownerId &&
-            !selectedCollaborators.some((collaborator) => collaborator.id === user.id),
-    )
-
-    function handleAddCollaborator() {
-        const collaboratorId = Number(selectedCollaboratorId)
-
-        if (!Number.isInteger(collaboratorId) || collaboratorId <= 0) {
-            setCollaboratorError('Select collaborator first.')
-            return
-        }
-
-        if (collaboratorId === ownerId) {
-            setCollaboratorError('Task owner cannot be collaborator.')
-            return
-        }
-
-        if (selectedCollaborators.some((collaborator) => collaborator.id === collaboratorId)) {
-            setCollaboratorError('Collaborator is already selected.')
-            return
-        }
-
-        const collaborator = users.find((user) => user.id === collaboratorId)
-
-        if (!collaborator) {
-            setCollaboratorError('Selected collaborator was not found.')
-            return
-        }
-
-        setSelectedCollaboratorsOverride([
-            ...selectedCollaborators,
-            collaborator,
-        ])
-        setSelectedCollaboratorId('')
-        setCollaboratorError(null)
-    }
-
-    function handleRemoveCollaborator(collaboratorId: number) {
-        setSelectedCollaboratorsOverride(
-            selectedCollaborators.filter((collaborator) => collaborator.id !== collaboratorId),
-        )
-        setCollaboratorError(null)
-    }
-
     function onSubmit(values: UpdateTaskFormValues) {
         setSuccessMessage(null)
         setCollaboratorError(null)
@@ -246,140 +197,43 @@ export function AdminUpdateUserTaskPage() {
             {successMessage && <div className="success-state">{successMessage}</div>}
 
             {task && (
-                <form className="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-                    <div className="form-field">
-                        <label htmlFor="id">ID</label>
-                        <input id="id" type="text" value={task.id} disabled readOnly />
-                    </div>
-
-                    <div className="form-field">
-                        <label htmlFor="name">Name</label>
-                        <input id="name" type="text" {...register('name')} />
-                        {errors.name?.message && (
-                            <span className="field-error">{errors.name.message}</span>
-                        )}
-                    </div>
-
-                    <div className="form-field">
-                        <label htmlFor="priority">Priority</label>
-                        <select id="priority" {...register('priority')}>
-                            {TASK_PRIORITIES.map((priority: TaskPriority) => (
-                                <option key={priority} value={priority}>
-                                    {priority}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.priority?.message && (
-                            <span className="field-error">{errors.priority.message}</span>
-                        )}
-                    </div>
-
-                    <div className="form-field">
-                        <label htmlFor="status">Status</label>
-                        <select id="status" {...register('status')}>
-                            {TASK_STATUSES.map((status: TaskStatus) => (
-                                <option key={status} value={status}>
-                                    {formatEnumValue(status)}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.status?.message && (
-                            <span className="field-error">{errors.status.message}</span>
-                        )}
-                    </div>
-
-                    <section className="collaborators-section">
-                        <h2>Collaborators</h2>
-
-                        {isUsersLoading && (
-                            <div className="loading-state">Loading collaborators...</div>
-                        )}
-
-                        {!isUsersLoading && (
-                            <div className="collaborator-selector">
-                                <select
-                                    aria-label="Collaborator"
-                                    value={selectedCollaboratorId}
-                                    disabled={
-                                        availableCollaborators.length === 0 ||
-                                        updateTaskMutation.isPending
-                                    }
-                                    onChange={(event) => {
-                                        setSelectedCollaboratorId(event.target.value)
-                                        setCollaboratorError(null)
-                                    }}
-                                >
-                                    <option value="">Select collaborator</option>
-
-                                    {availableCollaborators.map((user) => (
-                                        <option key={user.id} value={user.id}>
-                                            {formatUserOption(user)}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <button
-                                    className="button"
-                                    type="button"
-                                    disabled={!selectedCollaboratorId || updateTaskMutation.isPending}
-                                    onClick={handleAddCollaborator}
-                                >
-                                    Add Collaborator
-                                </button>
-                            </div>
-                        )}
-
-                        {collaboratorError && (
-                            <span className="field-error">{collaboratorError}</span>
-                        )}
-
-                        {selectedCollaborators.length === 0 && (
-                            <div className="empty-state">No collaborators selected.</div>
-                        )}
-
-                        {selectedCollaborators.length > 0 && (
-                            <ul className="collaborator-list">
-                                {selectedCollaborators.map((collaborator) => (
-                                    <li key={collaborator.id} className="collaborator-list-item">
-                                        <span>{formatUserOption(collaborator)}</span>
-
-                                        <button
-                                            className="button danger"
-                                            type="button"
-                                            disabled={updateTaskMutation.isPending}
-                                            onClick={() => handleRemoveCollaborator(collaborator.id)}
-                                        >
-                                            Remove
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </section>
-
-                    <div className="form-actions">
-                        <button
-                            className="button primary"
-                            type="submit"
+                <TaskForm
+                    onSubmit={handleSubmit(onSubmit)}
+                    nameRegistration={register('name')}
+                    priorityRegistration={register('priority')}
+                    statusRegistration={register('status')}
+                    errors={{
+                        name: errors.name?.message,
+                        priority: errors.priority?.message,
+                        status: errors.status?.message,
+                    }}
+                    isPending={updateTaskMutation.isPending}
+                    submitLabel="Update"
+                    pendingSubmitLabel="Updating..."
+                    onClear={handleClear}
+                    backTo={ROUTES.adminUserTasks(userIdNumber)}
+                    backLabel="Go to Task List"
+                    childrenBeforeFields={
+                        <div className="form-field">
+                            <label htmlFor="id">ID</label>
+                            <input id="id" type="text" value={task.id} disabled readOnly />
+                        </div>
+                    }
+                    childrenAfterFields={
+                        <CollaboratorSelector
+                            availableUsers={users}
+                            selectedCollaborators={selectedCollaborators}
+                            selectedCollaboratorId={selectedCollaboratorId}
+                            excludedUserId={ownerId}
+                            error={collaboratorError}
+                            isLoading={isUsersLoading}
                             disabled={updateTaskMutation.isPending}
-                        >
-                            {updateTaskMutation.isPending ? 'Updating...' : 'Update'}
-                        </button>
-
-                        <button
-                            className="button"
-                            type="button"
-                            disabled={updateTaskMutation.isPending}
-                            onClick={handleClear}
-                        >
-                            Clear
-                        </button>
-
-                        <Link className="button" to={ROUTES.adminUserTasks(userIdNumber)}>
-                            Go to Task List
-                        </Link>
-                    </div>
-                </form>
+                            onSelectedCollaboratorIdChange={setSelectedCollaboratorId}
+                            onSelectedCollaboratorsChange={setSelectedCollaboratorsOverride}
+                            onErrorChange={setCollaboratorError}
+                        />
+                    }
+                />
             )}
         </section>
     )
@@ -391,20 +245,6 @@ function toFormValues(task: TaskResponse): UpdateTaskFormValues {
         priority: task.priority,
         status: task.status,
     }
-}
-
-function formatUserOption(user: UserShortResponse): string {
-    const fullName = `${user.firstName} ${user.lastName}`.trim()
-
-    if (!fullName) {
-        return user.email
-    }
-
-    return `${fullName} (${user.email})`
-}
-
-function formatEnumValue(value: string): string {
-    return value.replace(/_/g, ' ')
 }
 
 function isUpdateTaskField(field: string): field is keyof UpdateTaskFormValues {
