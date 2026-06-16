@@ -3,6 +3,14 @@ import { getAccessToken } from '../auth/authTokenStorage'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
+type AuthFailureHandler = () => void
+
+let authFailureHandler: AuthFailureHandler | null = null
+
+export function setAuthFailureHandler(handler: AuthFailureHandler | null): void {
+    authFailureHandler = handler
+}
+
 export const httpClient = axios.create({
     baseURL: API_BASE_URL,
     headers: {
@@ -19,6 +27,17 @@ httpClient.interceptors.request.use((config) => {
 
     return config
 })
+
+httpClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (axios.isAxiosError(error) && isAuthFailure(error)) {
+            authFailureHandler?.()
+        }
+
+        return Promise.reject(error)
+    },
+)
 
 export function resolveApiErrorMessage(cause: unknown): string {
     if (axios.isAxiosError(cause)) {
@@ -48,6 +67,20 @@ export function resolveApiFieldErrors(cause: unknown): Record<string, string> {
         extractFieldErrors(responseData.errors) ??
         extractFieldErrors(responseData.validationErrors) ??
         {}
+    )
+}
+
+function isAuthFailure(cause: AxiosError): boolean {
+    const status = cause.response?.status
+    const requestUrl = cause.config?.url ?? ''
+
+    if (status === 401) {
+        return true
+    }
+
+    return (
+        requestUrl.includes('/api/users/me') &&
+        (status === 403 || status === 404)
     )
 }
 

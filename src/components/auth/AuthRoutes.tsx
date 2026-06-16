@@ -4,7 +4,21 @@ import { ROUTES } from '../../config/routes'
 
 export function ProtectedRoute() {
     const location = useLocation()
-    const { isAuthenticated } = useAuth()
+    const { accessToken, isAuthenticated, isCurrentUserLoading } = useAuth()
+
+    if (!accessToken) {
+        return (
+            <Navigate
+                to={ROUTES.login}
+                replace
+                state={{ from: location.pathname }}
+            />
+        )
+    }
+
+    if (isCurrentUserLoading) {
+        return <div className="loading-state">Loading profile...</div>
+    }
 
     if (!isAuthenticated) {
         return (
@@ -20,7 +34,11 @@ export function ProtectedRoute() {
 }
 
 export function PublicOnlyRoute() {
-    const { isAuthenticated } = useAuth()
+    const { accessToken, isAuthenticated, isCurrentUserLoading } = useAuth()
+
+    if (accessToken && isCurrentUserLoading) {
+        return <div className="loading-state">Loading profile...</div>
+    }
 
     if (isAuthenticated) {
         return <Navigate to={ROUTES.users} replace />

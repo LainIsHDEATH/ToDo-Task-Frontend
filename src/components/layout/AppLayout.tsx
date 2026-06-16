@@ -1,16 +1,13 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { NAV_ITEMS, ROUTES } from '../../config/routes'
 
 export function AppLayout() {
     const navigate = useNavigate()
-    const queryClient = useQueryClient()
     const { isAuthenticated, logout } = useAuth()
 
     function handleLogout() {
         logout()
-        queryClient.clear()
         navigate(ROUTES.login)
     }
 
