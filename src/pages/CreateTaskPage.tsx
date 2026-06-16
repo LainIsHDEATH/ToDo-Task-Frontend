@@ -57,7 +57,7 @@ export function CreateTaskPage() {
                 queryKey: ['users', userIdNumber, 'tasks'],
             })
 
-            navigate(ROUTES.userTasks(userIdNumber))
+            navigate(ROUTES.adminUserTasks(userIdNumber))
         },
         onError: (cause) => {
             const fieldErrors = resolveApiFieldErrors(cause)
@@ -145,7 +145,7 @@ export function CreateTaskPage() {
 
                 <div className="error-state">Invalid user id.</div>
 
-                <Link className="button" to={ROUTES.users}>
+                <Link className="button" to={ROUTES.adminUsers}>
                     Back to Users
                 </Link>
             </section>
@@ -160,7 +160,7 @@ export function CreateTaskPage() {
                     <p>Create a new task for user #{userIdNumber}.</p>
                 </div>
 
-                <Link className="button" to={ROUTES.userTasks(userIdNumber)}>
+                <Link className="button" to={ROUTES.adminUserTasks(userIdNumber)}>
                     Back to Tasks
                 </Link>
             </div>
@@ -285,7 +285,7 @@ export function CreateTaskPage() {
                         Clear
                     </button>
 
-                    <Link className="button" to={ROUTES.userTasks(userIdNumber)}>
+                    <Link className="button" to={ROUTES.adminUserTasks(userIdNumber)}>
                         Go to Task List
                     </Link>
                 </div>

@@ -38,7 +38,7 @@ export function UserTasksPage() {
 
                 <div className="error-state">Invalid user id.</div>
 
-                <Link className="button" to={ROUTES.users}>
+                <Link className="button" to={ROUTES.adminUsers}>
                     Back to Users
                 </Link>
             </section>
@@ -54,11 +54,11 @@ export function UserTasksPage() {
                 </div>
 
                 <div className="page-actions">
-                    <Link className="button" to={ROUTES.users}>
+                    <Link className="button" to={ROUTES.adminUsers}>
                         Back to Users
                     </Link>
 
-                    <Link className="button primary" to={ROUTES.createTask(userIdNumber)}>
+                    <Link className="button primary" to={ROUTES.adminCreateUserTask(userIdNumber)}>
                         Create New Task
                     </Link>
                 </div>
@@ -102,7 +102,7 @@ export function UserTasksPage() {
                             <td className="actions-cell">
                                 <Link
                                     className="button"
-                                    to={ROUTES.editTask(userIdNumber, task.id)}
+                                    to={ROUTES.adminEditUserTask(userIdNumber, task.id)}
                                 >
                                     Edit
                                 </Link>

@@ -70,8 +70,8 @@ export function CreateUserPage() {
                     <p>Register a new user in the system.</p>
                 </div>
 
-                <Link className="button" to={ROUTES.users}>
-                    Back to Users
+                <Link className="button" to={ROUTES.home}>
+                    Back to Home
                 </Link>
             </div>
 
