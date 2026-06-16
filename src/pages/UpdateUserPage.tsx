@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useParams } from 'react-router-dom'
 import {resolveApiErrorMessage, resolveApiFieldErrors} from '../api/httpClient'
-import { fetchUserById, updateUser } from '../api/usersApi'
+import { fetchAdminUserById, updateAdminUser } from '../api/adminUsersApi'
 import { ROUTES } from '../config/routes'
 import {updateUserSchema, type UpdateUserFormValues} from '../schemas/userSchemas'
 import type { UserResponse, UserRole } from '../types/user'
@@ -43,7 +43,7 @@ export function UpdateUserPage() {
         error: loadError,
     } = useQuery({
         queryKey: ['users', userIdNumber],
-        queryFn: () => fetchUserById(userIdNumber),
+        queryFn: () => fetchAdminUserById(userIdNumber),
         enabled: isValidUserId,
     })
 
@@ -54,7 +54,7 @@ export function UpdateUserPage() {
     }, [user, reset])
 
     const updateUserMutation = useMutation({
-        mutationFn: (values: UpdateUserFormValues) => updateUser(userIdNumber, values),
+        mutationFn: (values: UpdateUserFormValues) => updateAdminUser(userIdNumber, values),
         onSuccess: async (updatedUser) => {
             setSuccessMessage('User updated successfully.')
 

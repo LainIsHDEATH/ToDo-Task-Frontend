@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import {resolveApiErrorMessage, resolveApiFieldErrors,} from '../api/httpClient'
-import { registerUser } from '../api/usersApi'
+import { registerUser } from '../api/authApi'
 import { ROUTES } from '../config/routes'
 import {createUserSchema, type CreateUserFormValues,} from '../schemas/userSchemas'
 

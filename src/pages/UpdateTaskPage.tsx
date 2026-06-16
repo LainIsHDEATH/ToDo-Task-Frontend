@@ -7,8 +7,8 @@ import {
     resolveApiErrorMessage,
     resolveApiFieldErrors,
 } from '../api/httpClient'
-import { fetchTaskById, updateTask } from '../api/tasksApi'
-import { fetchUsers } from '../api/usersApi'
+import { fetchAdminTaskById, updateAdminTask } from '../api/adminTasksApi'
+import { fetchUserCatalog } from '../api/userApi'
 import { ROUTES } from '../config/routes'
 import {
     TASK_PRIORITIES,
@@ -22,7 +22,7 @@ import type {
     TaskStatus,
     UpdateTaskRequest,
 } from '../types/task'
-import type { UserResponse, UserShortResponse } from '../types/user'
+import type { UserShortResponse } from '../types/user'
 
 const DEFAULT_FORM_VALUES: UpdateTaskFormValues = {
     name: '',
@@ -64,8 +64,8 @@ export function UpdateTaskPage() {
         isLoading: isTaskLoading,
         error: taskError,
     } = useQuery({
-        queryKey: ['tasks', taskIdNumber],
-        queryFn: () => fetchTaskById(taskIdNumber),
+        queryKey: ['admin', 'tasks', taskIdNumber],
+        queryFn: () => fetchAdminTaskById(taskIdNumber),
         enabled: isValidTaskId,
     })
 
@@ -76,8 +76,8 @@ export function UpdateTaskPage() {
         isLoading: isUsersLoading,
         error: usersError,
     } = useQuery({
-        queryKey: ['users'],
-        queryFn: fetchUsers,
+        queryKey: ['users', 'catalog'],
+        queryFn: fetchUserCatalog,
         enabled: isValidUserId && isValidTaskId,
     })
 
@@ -88,7 +88,7 @@ export function UpdateTaskPage() {
     }, [task, reset])
 
     const updateTaskMutation = useMutation({
-        mutationFn: (request: UpdateTaskRequest) => updateTask(taskIdNumber, request),
+        mutationFn: (request: UpdateTaskRequest) => updateAdminTask(taskIdNumber, request),
         onSuccess: async (updatedTask) => {
             setSuccessMessage('Task updated successfully.')
             setCollaboratorError(null)
@@ -97,14 +97,14 @@ export function UpdateTaskPage() {
 
             reset(toFormValues(updatedTask))
 
-            queryClient.setQueryData(['tasks', taskIdNumber], updatedTask)
+            queryClient.setQueryData(['admin', 'tasks', taskIdNumber], updatedTask)
 
             await Promise.all([
                 queryClient.invalidateQueries({
-                    queryKey: ['users', userIdNumber, 'tasks'],
+                    queryKey: ['admin', 'users', userIdNumber, 'tasks'],
                 }),
                 queryClient.invalidateQueries({
-                    queryKey: ['tasks', taskIdNumber],
+                    queryKey: ['admin', 'tasks', taskIdNumber],
                 }),
             ])
         },
@@ -160,7 +160,7 @@ export function UpdateTaskPage() {
 
         setSelectedCollaboratorsOverride([
             ...selectedCollaborators,
-            toUserShortResponse(collaborator),
+            collaborator,
         ])
         setSelectedCollaboratorId('')
         setCollaboratorError(null)
@@ -389,15 +389,6 @@ function toFormValues(task: TaskResponse): UpdateTaskFormValues {
         name: task.name,
         priority: task.priority,
         status: task.status,
-    }
-}
-
-function toUserShortResponse(user: UserResponse): UserShortResponse {
-    return {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
     }
 }
 

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { resolveApiErrorMessage } from '../api/httpClient'
-import { fetchUserTasks, removeTask } from '../api/tasksApi'
+import { fetchAdminUserTasks, removeAdminTask } from '../api/adminTasksApi'
 import { ROUTES } from '../config/routes'
 import type { TaskListItemResponse } from '../types/task'
 
@@ -18,12 +18,12 @@ export function UserTasksPage() {
         error,
     } = useQuery({
         queryKey: ['users', userIdNumber, 'tasks'],
-        queryFn: () => fetchUserTasks(userIdNumber),
+        queryFn: () => fetchAdminUserTasks(userIdNumber),
         enabled: isValidUserId,
     })
 
     const removeTaskMutation = useMutation({
-        mutationFn: removeTask,
+        mutationFn: removeAdminTask,
         onSuccess: async () => {
             await queryClient.invalidateQueries({
                 queryKey: ['users', userIdNumber, 'tasks'],
