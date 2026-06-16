@@ -18,6 +18,12 @@ export interface RegisterUserRequest {
     password: string
 }
 
+export interface UserProfileUpdateRequest {
+    firstName: string
+    lastName: string
+    email: string
+}
+
 export interface UpdateUserRequest {
     firstName: string
     lastName: string

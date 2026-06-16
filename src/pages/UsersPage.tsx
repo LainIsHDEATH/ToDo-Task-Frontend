@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { resolveApiErrorMessage } from '../api/httpClient'
-import { fetchUsers, removeUser } from '../api/usersApi'
+import { fetchAdminUsers, removeAdminUser } from '../api/adminUsersApi'
 import { ROUTES } from '../config/routes'
 import type { UserResponse } from '../types/user'
 
@@ -14,11 +14,11 @@ export function UsersPage() {
         error,
     } = useQuery({
         queryKey: ['users'],
-        queryFn: fetchUsers,
+        queryFn: fetchAdminUsers,
     })
 
     const removeUserMutation = useMutation({
-        mutationFn: removeUser,
+        mutationFn: removeAdminUser,
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['users'] })
         },

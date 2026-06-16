@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {resolveApiErrorMessage, resolveApiFieldErrors} from '../api/httpClient'
-import { createTask } from '../api/tasksApi'
-import { fetchUsers } from '../api/usersApi'
+import { createAdminUserTask } from '../api/adminTasksApi'
+import { fetchUserCatalog } from '../api/userApi'
 import { ROUTES } from '../config/routes'
 import {createTaskSchema, TASK_PRIORITIES, type CreateTaskFormValues} from '../schemas/taskSchemas'
 import type { CreateTaskRequest, TaskPriority } from '../types/task'
-import type { UserResponse } from '../types/user'
+import type { UserShortResponse } from '../types/user'
 
 const DEFAULT_FORM_VALUES: CreateTaskFormValues = {
     name: '',
@@ -25,7 +25,7 @@ export function CreateTaskPage() {
     const queryClient = useQueryClient()
 
     const [selectedCollaboratorId, setSelectedCollaboratorId] = useState('')
-    const [selectedCollaborators, setSelectedCollaborators] = useState<UserResponse[]>([])
+    const [selectedCollaborators, setSelectedCollaborators] = useState<UserShortResponse[]>([])
     const [collaboratorError, setCollaboratorError] = useState<string | null>(null)
 
     const {
@@ -46,12 +46,12 @@ export function CreateTaskPage() {
         error: usersError,
     } = useQuery({
         queryKey: ['users'],
-        queryFn: fetchUsers,
+        queryFn: fetchUserCatalog,
         enabled: isValidUserId,
     })
 
     const createTaskMutation = useMutation({
-        mutationFn: (request: CreateTaskRequest) => createTask(userIdNumber, request),
+        mutationFn: (request: CreateTaskRequest) => createAdminUserTask(userIdNumber, request),
         onSuccess: async () => {
             await queryClient.invalidateQueries({
                 queryKey: ['users', userIdNumber, 'tasks'],
@@ -294,7 +294,7 @@ export function CreateTaskPage() {
     )
 }
 
-function formatUserOption(user: UserResponse): string {
+function formatUserOption(user: UserShortResponse): string {
     const fullName = `${user.firstName} ${user.lastName}`.trim()
 
     if (!fullName) {
