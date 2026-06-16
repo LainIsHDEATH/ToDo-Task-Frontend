@@ -128,7 +128,7 @@ function resolveRedirectPath(state: LoginLocationState | null): string {
         return state.from
     }
 
-    return ROUTES.users
+    return ROUTES.myTasks
 }
 
 function isLoginField(field: string): field is keyof LoginFormValues {
