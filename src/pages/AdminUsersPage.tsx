@@ -5,7 +5,7 @@ import { fetchAdminUsers, removeAdminUser } from '../api/adminUsersApi'
 import { ROUTES } from '../config/routes'
 import type { UserResponse } from '../types/user'
 
-export function UsersPage() {
+export function AdminUsersPage() {
     const queryClient = useQueryClient()
 
     const {
@@ -13,14 +13,14 @@ export function UsersPage() {
         isLoading,
         error,
     } = useQuery({
-        queryKey: ['users'],
+        queryKey: ['admin', 'users'],
         queryFn: fetchAdminUsers,
     })
 
     const removeUserMutation = useMutation({
         mutationFn: removeAdminUser,
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['users'] })
+            await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
         },
     })
 
@@ -28,8 +28,8 @@ export function UsersPage() {
         <section>
             <div className="page-header">
                 <div>
-                    <h1>Users</h1>
-                    <p>Registered users from the backend.</p>
+                    <h1>Admin Users</h1>
+                    <p>Manage registered users.</p>
                 </div>
 
                 <Link className="button primary" to={ROUTES.createUser}>

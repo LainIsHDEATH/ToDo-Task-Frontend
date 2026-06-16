@@ -16,7 +16,7 @@ const DEFAULT_FORM_VALUES: CreateTaskFormValues = {
     priority: 'LOW',
 }
 
-export function CreateTaskPage() {
+export function AdminCreateUserTaskPage() {
     const { userId } = useParams()
     const userIdNumber = Number(userId)
     const isValidUserId = Number.isInteger(userIdNumber) && userIdNumber > 0
@@ -45,7 +45,7 @@ export function CreateTaskPage() {
         isLoading: isUsersLoading,
         error: usersError,
     } = useQuery({
-        queryKey: ['users'],
+        queryKey: ['users', 'catalog'],
         queryFn: fetchUserCatalog,
         enabled: isValidUserId,
     })
@@ -54,7 +54,7 @@ export function CreateTaskPage() {
         mutationFn: (request: CreateTaskRequest) => createAdminUserTask(userIdNumber, request),
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ['users', userIdNumber, 'tasks'],
+                queryKey: ['admin', 'users', userIdNumber, 'tasks'],
             })
 
             navigate(ROUTES.adminUserTasks(userIdNumber))
@@ -156,7 +156,7 @@ export function CreateTaskPage() {
         <section>
             <div className="page-header">
                 <div>
-                    <h1>Create New Task</h1>
+                    <h1>Create Admin User Task</h1>
                     <p>Create a new task for user #{userIdNumber}.</p>
                 </div>
 

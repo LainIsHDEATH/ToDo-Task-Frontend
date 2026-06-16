@@ -30,7 +30,7 @@ const DEFAULT_FORM_VALUES: UpdateTaskFormValues = {
     status: 'TODO',
 }
 
-export function UpdateTaskPage() {
+export function AdminUpdateUserTaskPage() {
     const { userId, taskId } = useParams()
 
     const userIdNumber = Number(userId)
@@ -218,10 +218,8 @@ export function UpdateTaskPage() {
         <section>
             <div className="page-header">
                 <div>
-                    <h1>Update Task</h1>
-                    <p>
-                        Update task #{taskIdNumber} for user #{userIdNumber}.
-                    </p>
+                    <h1>Update Admin User Task</h1>
+                    <p>Update task #{taskIdNumber} for user #{userIdNumber}.</p>
                 </div>
 
                 <Link className="button" to={ROUTES.adminUserTasks(userIdNumber)}>

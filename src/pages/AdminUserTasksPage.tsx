@@ -5,7 +5,7 @@ import { fetchAdminUserTasks, removeAdminTask } from '../api/adminTasksApi'
 import { ROUTES } from '../config/routes'
 import type { TaskListItemResponse } from '../types/task'
 
-export function UserTasksPage() {
+export function AdminUserTasksPage() {
     const { userId } = useParams()
     const userIdNumber = Number(userId)
     const isValidUserId = Number.isInteger(userIdNumber) && userIdNumber > 0
@@ -17,7 +17,7 @@ export function UserTasksPage() {
         isLoading,
         error,
     } = useQuery({
-        queryKey: ['users', userIdNumber, 'tasks'],
+        queryKey: ['admin', 'users', userIdNumber, 'tasks'],
         queryFn: () => fetchAdminUserTasks(userIdNumber),
         enabled: isValidUserId,
     })
@@ -26,7 +26,7 @@ export function UserTasksPage() {
         mutationFn: removeAdminTask,
         onSuccess: async () => {
             await queryClient.invalidateQueries({
-                queryKey: ['users', userIdNumber, 'tasks'],
+                queryKey: ['admin', 'users', userIdNumber, 'tasks'],
             })
         },
     })
@@ -49,7 +49,7 @@ export function UserTasksPage() {
         <section>
             <div className="page-header">
                 <div>
-                    <h1>User Tasks</h1>
+                    <h1>Admin User Tasks</h1>
                     <p>Tasks of user #{userIdNumber}.</p>
                 </div>
 

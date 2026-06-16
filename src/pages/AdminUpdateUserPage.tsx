@@ -18,7 +18,7 @@ const DEFAULT_FORM_VALUES: UpdateUserFormValues = {
 
 const USER_ROLES: UserRole[] = ['USER', 'ADMIN']
 
-export function UpdateUserPage() {
+export function AdminUpdateUserPage() {
     const { userId } = useParams()
     const userIdNumber = Number(userId)
     const isValidUserId = Number.isInteger(userIdNumber) && userIdNumber > 0
@@ -42,7 +42,7 @@ export function UpdateUserPage() {
         isLoading,
         error: loadError,
     } = useQuery({
-        queryKey: ['users', userIdNumber],
+        queryKey: ['admin', 'users', userIdNumber],
         queryFn: () => fetchAdminUserById(userIdNumber),
         enabled: isValidUserId,
     })
@@ -60,9 +60,11 @@ export function UpdateUserPage() {
 
             reset(toFormValues(updatedUser))
 
+            queryClient.setQueryData(['admin', 'users', userIdNumber], updatedUser)
+
             await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['users'] }),
-                queryClient.invalidateQueries({ queryKey: ['users', userIdNumber] }),
+                queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
+                queryClient.invalidateQueries({ queryKey: ['admin', 'users', userIdNumber] }),
             ])
         },
         onError: (cause) => {
@@ -110,8 +112,8 @@ export function UpdateUserPage() {
         <section>
             <div className="page-header">
                 <div>
-                    <h1>Update User</h1>
-                    <p>Edit existing user details.</p>
+                    <h1>Update Admin User</h1>
+                    <p>Edit user details as administrator.</p>
                 </div>
 
                 <Link className="button" to={ROUTES.adminUsers}>
