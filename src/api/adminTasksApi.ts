@@ -1,3 +1,5 @@
+import type { PageRequestParams } from './pagination'
+import { DEFAULT_PAGE_REQUEST, toPageResponse } from './pagination'
 import { httpClient } from './httpClient'
 import type { PageResponse } from '../types/user'
 import type {
@@ -9,24 +11,36 @@ import type {
 
 type TasksResponse = PageResponse<TaskListItemResponse> | TaskListItemResponse[]
 
-export async function fetchAdminTasks(): Promise<TaskListItemResponse[]> {
-    const response = await httpClient.get<TasksResponse>('/api/admin/tasks')
+export async function fetchAdminTasks(
+    params: PageRequestParams = DEFAULT_PAGE_REQUEST,
+): Promise<PageResponse<TaskListItemResponse>> {
+    const response = await httpClient.get<TasksResponse>('/api/admin/tasks', {
+        params,
+    })
 
     if (Array.isArray(response.data)) {
-        return response.data
+        return toPageResponse(response.data, params)
     }
 
-    return response.data.content
+    return response.data
 }
 
-export async function fetchAdminUserTasks(userId: number): Promise<TaskListItemResponse[]> {
-    const response = await httpClient.get<TasksResponse>(`/api/admin/users/${userId}/tasks`)
+export async function fetchAdminUserTasks(
+    userId: number,
+    params: PageRequestParams = DEFAULT_PAGE_REQUEST,
+): Promise<PageResponse<TaskListItemResponse>> {
+    const response = await httpClient.get<TasksResponse>(
+        `/api/admin/users/${userId}/tasks`,
+        {
+            params,
+        },
+    )
 
     if (Array.isArray(response.data)) {
-        return response.data
+        return toPageResponse(response.data, params)
     }
 
-    return response.data.content
+    return response.data
 }
 
 export async function createAdminUserTask(

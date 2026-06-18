@@ -1,3 +1,5 @@
+import type { PageRequestParams } from './pagination'
+import { DEFAULT_PAGE_REQUEST, toPageResponse } from './pagination'
 import { httpClient } from './httpClient'
 import type {
     PageResponse,
@@ -8,14 +10,18 @@ import type {
 
 type UserCatalogResponse = PageResponse<UserShortResponse> | UserShortResponse[]
 
-export async function fetchUserCatalog(): Promise<UserShortResponse[]> {
-    const response = await httpClient.get<UserCatalogResponse>('/api/users')
+export async function fetchUserCatalog(
+    params: PageRequestParams = DEFAULT_PAGE_REQUEST,
+): Promise<PageResponse<UserShortResponse>> {
+    const response = await httpClient.get<UserCatalogResponse>('/api/users', {
+        params,
+    })
 
     if (Array.isArray(response.data)) {
-        return response.data
+        return toPageResponse(response.data, params)
     }
 
-    return response.data.content
+    return response.data
 }
 
 export async function fetchCurrentUser(): Promise<UserResponse> {

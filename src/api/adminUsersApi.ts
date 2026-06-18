@@ -1,3 +1,5 @@
+import type { PageRequestParams } from './pagination'
+import { DEFAULT_PAGE_REQUEST, toPageResponse } from './pagination'
 import { httpClient } from './httpClient'
 import type {
     PageResponse,
@@ -7,14 +9,18 @@ import type {
 
 type AdminUsersResponse = PageResponse<UserResponse> | UserResponse[]
 
-export async function fetchAdminUsers(): Promise<UserResponse[]> {
-    const response = await httpClient.get<AdminUsersResponse>('/api/admin/users')
+export async function fetchAdminUsers(
+    params: PageRequestParams = DEFAULT_PAGE_REQUEST,
+): Promise<PageResponse<UserResponse>> {
+    const response = await httpClient.get<AdminUsersResponse>('/api/admin/users', {
+        params,
+    })
 
     if (Array.isArray(response.data)) {
-        return response.data
+        return toPageResponse(response.data, params)
     }
 
-    return response.data.content
+    return response.data
 }
 
 export async function fetchAdminUserById(userId: number): Promise<UserResponse> {

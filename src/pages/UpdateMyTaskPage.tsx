@@ -1,27 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useParams } from 'react-router-dom'
-import {
-    resolveApiErrorMessage,
-    resolveApiFieldErrors,
-} from '../api/httpClient'
+import { resolveApiErrorMessage, resolveApiFieldErrors } from '../api/httpClient'
 import { fetchMyTaskById, updateMyTask } from '../api/taskApi'
 import { fetchUserCatalog } from '../api/userApi'
-import { useAuth } from '../auth/useAuth'
+import { PaginationControls } from '../components/pagination/PaginationControls'
+import { CollaboratorSelector } from '../components/tasks/CollaboratorSelector'
+import { TaskForm } from '../components/tasks/TaskForm'
 import { ROUTES } from '../config/routes'
-import {
-    type UpdateTaskFormValues,
-    updateTaskSchema,
-} from '../schemas/taskSchemas'
-import type {
-    TaskResponse,
-    UpdateTaskRequest,
-} from '../types/task'
+import { type UpdateTaskFormValues, updateTaskSchema } from '../schemas/taskSchemas'
+import type { TaskResponse, UpdateTaskRequest } from '../types/task'
 import type { UserShortResponse } from '../types/user'
-import {CollaboratorSelector} from "../components/tasks/CollaboratorSelector.tsx";
-import {TaskForm} from "../components/tasks/TaskForm.tsx";
 
 const DEFAULT_FORM_VALUES: UpdateTaskFormValues = {
     name: '',
@@ -35,13 +26,24 @@ export function UpdateMyTaskPage() {
     const isValidTaskId = Number.isInteger(taskIdNumber) && taskIdNumber > 0
 
     const queryClient = useQueryClient()
-    const { currentUser } = useAuth()
 
     const [selectedCollaboratorId, setSelectedCollaboratorId] = useState('')
     const [selectedCollaboratorsOverride, setSelectedCollaboratorsOverride] =
         useState<UserShortResponse[] | null>(null)
     const [collaboratorError, setCollaboratorError] = useState<string | null>(null)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+    const [collaboratorsPage, setCollaboratorsPage] = useState(0)
+    const [collaboratorsSize, setCollaboratorsSize] = useState(10)
+
+    const collaboratorPageRequest = useMemo(
+        () => ({
+            page: collaboratorsPage,
+            size: collaboratorsSize,
+            sort: 'id,asc',
+        }),
+        [collaboratorsPage, collaboratorsSize],
+    )
 
     const {
         register,
@@ -66,16 +68,19 @@ export function UpdateMyTaskPage() {
     })
 
     const selectedCollaborators = selectedCollaboratorsOverride ?? task?.collaborators ?? []
+    const ownerId = task?.owner.id ?? null
 
     const {
-        data: users = [],
+        data: usersPage,
         isLoading: isUsersLoading,
         error: usersError,
     } = useQuery({
-        queryKey: ['users', 'catalog'],
-        queryFn: fetchUserCatalog,
+        queryKey: ['users', 'catalog', collaboratorPageRequest],
+        queryFn: () => fetchUserCatalog(collaboratorPageRequest),
         enabled: isValidTaskId,
     })
+
+    const users = usersPage?.content ?? []
 
     useEffect(() => {
         if (task) {
@@ -121,27 +126,21 @@ export function UpdateMyTaskPage() {
         },
     })
 
-    const ownerId = task?.owner.id ?? currentUser?.id
-
     function onSubmit(values: UpdateTaskFormValues) {
         setSuccessMessage(null)
         setCollaboratorError(null)
 
-        const request: UpdateTaskRequest = {
+        updateTaskMutation.mutate({
             name: values.name,
             priority: values.priority,
             status: values.status,
             collaboratorIds: selectedCollaborators.map((collaborator) => collaborator.id),
-        }
-
-        updateTaskMutation.mutate(request)
+        })
     }
 
     function handleClear() {
         if (task) {
             reset(toFormValues(task))
-        } else {
-            reset(DEFAULT_FORM_VALUES)
         }
 
         setSelectedCollaboratorsOverride(null)
@@ -151,15 +150,20 @@ export function UpdateMyTaskPage() {
         updateTaskMutation.reset()
     }
 
+    function handleCollaboratorsSizeChange(nextSize: number) {
+        setCollaboratorsSize(nextSize)
+        setCollaboratorsPage(0)
+    }
+
     if (!isValidTaskId) {
         return (
             <section>
-                <h1>Update My Task</h1>
+                <h1>Update Task</h1>
 
                 <div className="error-state">Invalid task id.</div>
 
                 <Link className="button" to={ROUTES.myTasks}>
-                    Back to My Tasks
+                    Back to Tasks
                 </Link>
             </section>
         )
@@ -169,12 +173,12 @@ export function UpdateMyTaskPage() {
         <section>
             <div className="page-header">
                 <div>
-                    <h1>Update My Task</h1>
+                    <h1>Update Task</h1>
                     <p>Update task #{taskIdNumber}.</p>
                 </div>
 
                 <Link className="button" to={ROUTES.myTasks}>
-                    Back to My Tasks
+                    Back to Tasks
                 </Link>
             </div>
 
@@ -220,18 +224,32 @@ export function UpdateMyTaskPage() {
                         </div>
                     }
                     childrenAfterFields={
-                        <CollaboratorSelector
-                            availableUsers={users}
-                            selectedCollaborators={selectedCollaborators}
-                            selectedCollaboratorId={selectedCollaboratorId}
-                            excludedUserId={ownerId}
-                            error={collaboratorError}
-                            isLoading={isUsersLoading}
-                            disabled={updateTaskMutation.isPending}
-                            onSelectedCollaboratorIdChange={setSelectedCollaboratorId}
-                            onSelectedCollaboratorsChange={setSelectedCollaboratorsOverride}
-                            onErrorChange={setCollaboratorError}
-                        />
+                        <>
+                            <CollaboratorSelector
+                                availableUsers={users}
+                                selectedCollaborators={selectedCollaborators}
+                                selectedCollaboratorId={selectedCollaboratorId}
+                                excludedUserId={ownerId}
+                                error={collaboratorError}
+                                isLoading={isUsersLoading}
+                                disabled={updateTaskMutation.isPending}
+                                onSelectedCollaboratorIdChange={setSelectedCollaboratorId}
+                                onSelectedCollaboratorsChange={(collaborators) =>
+                                    setSelectedCollaboratorsOverride(collaborators)
+                                }
+                                onErrorChange={setCollaboratorError}
+                            />
+
+                            <PaginationControls
+                                page={usersPage?.page ?? collaboratorsPage}
+                                size={usersPage?.size ?? collaboratorsSize}
+                                totalElements={usersPage?.totalElements ?? 0}
+                                totalPages={usersPage?.totalPages ?? 0}
+                                isLoading={isUsersLoading}
+                                onPageChange={setCollaboratorsPage}
+                                onSizeChange={handleCollaboratorsSizeChange}
+                            />
+                        </>
                     }
                 />
             )}
