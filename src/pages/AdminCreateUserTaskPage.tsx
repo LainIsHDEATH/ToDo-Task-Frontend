@@ -1,17 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import {resolveApiErrorMessage, resolveApiFieldErrors} from '../api/httpClient'
 import { createAdminUserTask } from '../api/adminTasksApi'
+import { resolveApiErrorMessage, resolveApiFieldErrors } from '../api/httpClient'
 import { fetchUserCatalog } from '../api/userApi'
+import { PaginationControls } from '../components/pagination/PaginationControls'
+import { CollaboratorSelector } from '../components/tasks/CollaboratorSelector'
+import { TaskForm } from '../components/tasks/TaskForm'
 import { ROUTES } from '../config/routes'
-import {createTaskSchema, type CreateTaskFormValues} from '../schemas/taskSchemas'
+import { createTaskSchema, type CreateTaskFormValues } from '../schemas/taskSchemas'
 import type { CreateTaskRequest } from '../types/task'
 import type { UserShortResponse } from '../types/user'
-import {CollaboratorSelector} from "../components/tasks/CollaboratorSelector.tsx";
-import {TaskForm} from "../components/tasks/TaskForm.tsx";
 
 const DEFAULT_FORM_VALUES: CreateTaskFormValues = {
     name: '',
@@ -30,6 +31,18 @@ export function AdminCreateUserTaskPage() {
     const [selectedCollaborators, setSelectedCollaborators] = useState<UserShortResponse[]>([])
     const [collaboratorError, setCollaboratorError] = useState<string | null>(null)
 
+    const [collaboratorsPage, setCollaboratorsPage] = useState(0)
+    const [collaboratorsSize, setCollaboratorsSize] = useState(10)
+
+    const collaboratorPageRequest = useMemo(
+        () => ({
+            page: collaboratorsPage,
+            size: collaboratorsSize,
+            sort: 'id,asc',
+        }),
+        [collaboratorsPage, collaboratorsSize],
+    )
+
     const {
         register,
         handleSubmit,
@@ -43,18 +56,26 @@ export function AdminCreateUserTaskPage() {
     })
 
     const {
-        data: users = [],
+        data: usersPage,
         isLoading: isUsersLoading,
         error: usersError,
     } = useQuery({
-        queryKey: ['users', 'catalog'],
-        queryFn: fetchUserCatalog,
+        queryKey: ['users', 'catalog', collaboratorPageRequest],
+        queryFn: () => fetchUserCatalog(collaboratorPageRequest),
         enabled: isValidUserId,
     })
 
+    const users = usersPage?.content ?? []
+
     const createTaskMutation = useMutation({
-        mutationFn: (request: CreateTaskRequest) => createAdminUserTask(userIdNumber, request),
+        mutationFn: (request: CreateTaskRequest) =>
+            createAdminUserTask(userIdNumber, request),
         onSuccess: async () => {
+            reset(DEFAULT_FORM_VALUES)
+            setSelectedCollaborators([])
+            setSelectedCollaboratorId('')
+            setCollaboratorError(null)
+
             await queryClient.invalidateQueries({
                 queryKey: ['admin', 'users', userIdNumber, 'tasks'],
             })
@@ -88,16 +109,21 @@ export function AdminCreateUserTaskPage() {
 
     function handleClear() {
         reset(DEFAULT_FORM_VALUES)
-        setSelectedCollaboratorId('')
         setSelectedCollaborators([])
+        setSelectedCollaboratorId('')
         setCollaboratorError(null)
         createTaskMutation.reset()
+    }
+
+    function handleCollaboratorsSizeChange(nextSize: number) {
+        setCollaboratorsSize(nextSize)
+        setCollaboratorsPage(0)
     }
 
     if (!isValidUserId) {
         return (
             <section>
-                <h1>Create New Task</h1>
+                <h1>Create Task</h1>
 
                 <div className="error-state">Invalid user id.</div>
 
@@ -113,7 +139,7 @@ export function AdminCreateUserTaskPage() {
             <div className="page-header">
                 <div>
                     <h1>Create Admin User Task</h1>
-                    <p>Create a new task for user #{userIdNumber}.</p>
+                    <p>Create a task for user #{userIdNumber}.</p>
                 </div>
 
                 <Link className="button" to={ROUTES.adminUserTasks(userIdNumber)}>
@@ -146,18 +172,30 @@ export function AdminCreateUserTaskPage() {
                 backTo={ROUTES.adminUserTasks(userIdNumber)}
                 backLabel="Go to Task List"
                 childrenAfterFields={
-                    <CollaboratorSelector
-                        availableUsers={users}
-                        selectedCollaborators={selectedCollaborators}
-                        selectedCollaboratorId={selectedCollaboratorId}
-                        excludedUserId={userIdNumber}
-                        error={collaboratorError}
-                        isLoading={isUsersLoading}
-                        disabled={createTaskMutation.isPending}
-                        onSelectedCollaboratorIdChange={setSelectedCollaboratorId}
-                        onSelectedCollaboratorsChange={setSelectedCollaborators}
-                        onErrorChange={setCollaboratorError}
-                    />
+                    <>
+                        <CollaboratorSelector
+                            availableUsers={users}
+                            selectedCollaborators={selectedCollaborators}
+                            selectedCollaboratorId={selectedCollaboratorId}
+                            excludedUserId={userIdNumber}
+                            error={collaboratorError}
+                            isLoading={isUsersLoading}
+                            disabled={createTaskMutation.isPending}
+                            onSelectedCollaboratorIdChange={setSelectedCollaboratorId}
+                            onSelectedCollaboratorsChange={setSelectedCollaborators}
+                            onErrorChange={setCollaboratorError}
+                        />
+
+                        <PaginationControls
+                            page={usersPage?.page ?? collaboratorsPage}
+                            size={usersPage?.size ?? collaboratorsSize}
+                            totalElements={usersPage?.totalElements ?? 0}
+                            totalPages={usersPage?.totalPages ?? 0}
+                            isLoading={isUsersLoading}
+                            onPageChange={setCollaboratorsPage}
+                            onSizeChange={handleCollaboratorsSizeChange}
+                        />
+                    </>
                 }
             />
         </section>

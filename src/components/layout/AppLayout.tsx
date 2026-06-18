@@ -27,7 +27,7 @@ export function AppLayout() {
         <div className="app-shell">
             <header className="app-header">
                 <NavLink className="logo-link" to={ROUTES.home}>
-                    Tasks
+                    Home
                 </NavLink>
 
                 <nav className="main-navigation" aria-label="Main navigation">
@@ -51,14 +51,25 @@ export function AppLayout() {
                             Logout
                         </button>
                     ) : (
-                        <NavLink
-                            className={({ isActive }) =>
-                                isActive ? 'nav-link active' : 'nav-link'
-                            }
-                            to={ROUTES.login}
-                        >
-                            Login
-                        </NavLink>
+                        <>
+                            <NavLink
+                                className={({ isActive }) =>
+                                    isActive ? 'nav-link active' : 'nav-link'
+                                }
+                                to={ROUTES.register}
+                            >
+                                Register
+                            </NavLink>
+
+                            <NavLink
+                                className={({ isActive }) =>
+                                    isActive ? 'nav-link active' : 'nav-link'
+                                }
+                                to={ROUTES.login}
+                            >
+                                Login
+                            </NavLink>
+                        </>
                     )}
                 </nav>
             </header>
