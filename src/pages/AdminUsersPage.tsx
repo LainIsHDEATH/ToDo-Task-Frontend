@@ -5,25 +5,35 @@ import { fetchAdminUsers, removeAdminUser } from '../api/adminUsersApi'
 import { resolveApiErrorMessage } from '../api/httpClient'
 import { PaginationControls } from '../components/pagination/PaginationControls'
 import { ROUTES } from '../config/routes'
-import type { UserResponse, UserRole } from '../types/user'
+import type { UserResponse } from '../types/user'
 
-type UserRoleFilter = 'ALL' | UserRole
+const USER_SORT_OPTIONS = [
+    { label: 'ID ↑', value: 'id,asc' },
+    { label: 'ID ↓', value: 'id,desc' },
+    { label: 'First name ↑', value: 'firstName,asc' },
+    { label: 'First name ↓', value: 'firstName,desc' },
+    { label: 'Last name ↑', value: 'lastName,asc' },
+    { label: 'Last name ↓', value: 'lastName,desc' },
+    { label: 'Email ↑', value: 'email,asc' },
+    { label: 'Email ↓', value: 'email,desc' },
+    { label: 'Role ↑', value: 'role,asc' },
+    { label: 'Role ↓', value: 'role,desc' },
+]
 
 export function AdminUsersPage() {
     const queryClient = useQueryClient()
 
     const [page, setPage] = useState(0)
     const [size, setSize] = useState(20)
-    const [searchValue, setSearchValue] = useState('')
-    const [roleFilter, setRoleFilter] = useState<UserRoleFilter>('ALL')
+    const [sort, setSort] = useState('id,asc')
 
     const pageRequest = useMemo(
         () => ({
             page,
             size,
-            sort: 'id,asc',
+            sort,
         }),
-        [page, size],
+        [page, size, sort],
     )
 
     const {
@@ -36,15 +46,6 @@ export function AdminUsersPage() {
     })
 
     const users = usersPage?.content ?? []
-    const filteredUsers = users.filter((user) => {
-        const search = searchValue.trim().toLowerCase()
-        const fullName = getFullName(user).toLowerCase()
-        const email = user.email.toLowerCase()
-        const matchesSearch = !search || fullName.includes(search) || email.includes(search)
-        const matchesRole = roleFilter === 'ALL' || user.role === roleFilter
-
-        return matchesSearch && matchesRole
-    })
 
     const removeUserMutation = useMutation({
         mutationFn: removeAdminUser,
@@ -58,19 +59,8 @@ export function AdminUsersPage() {
         setPage(0)
     }
 
-    function handleSearchChange(value: string) {
-        setSearchValue(value)
-        setPage(0)
-    }
-
-    function handleRoleFilterChange(value: UserRoleFilter) {
-        setRoleFilter(value)
-        setPage(0)
-    }
-
-    function handleClearFilters() {
-        setSearchValue('')
-        setRoleFilter('ALL')
+    function handleSortChange(nextSort: string) {
+        setSort(nextSort)
         setPage(0)
     }
 
@@ -89,35 +79,19 @@ export function AdminUsersPage() {
 
             <div className="form">
                 <div className="form-field">
-                    <label htmlFor="userSearch">Search</label>
-                    <input
-                        id="userSearch"
-                        type="text"
-                        value={searchValue}
-                        placeholder="Search by name or email"
-                        onChange={(event) => handleSearchChange(event.target.value)}
-                    />
-                </div>
-
-                <div className="form-field">
-                    <label htmlFor="roleFilter">Role</label>
+                    <label htmlFor="userSort">Sort by</label>
                     <select
-                        id="roleFilter"
-                        value={roleFilter}
-                        onChange={(event) =>
-                            handleRoleFilterChange(event.target.value as UserRoleFilter)
-                        }
+                        id="userSort"
+                        value={sort}
+                        disabled={isLoading}
+                        onChange={(event) => handleSortChange(event.target.value)}
                     >
-                        <option value="ALL">All roles</option>
-                        <option value="USER">USER</option>
-                        <option value="ADMIN">ADMIN</option>
+                        {USER_SORT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
-                </div>
-
-                <div className="form-actions">
-                    <button className="button" type="button" onClick={handleClearFilters}>
-                        Clear Filters
-                    </button>
                 </div>
             </div>
 
@@ -135,11 +109,7 @@ export function AdminUsersPage() {
                 <div className="empty-state">No users were found.</div>
             )}
 
-            {!isLoading && users.length > 0 && filteredUsers.length === 0 && (
-                <div className="empty-state">No users match selected filters.</div>
-            )}
-
-            {!isLoading && filteredUsers.length > 0 && (
+            {!isLoading && users.length > 0 && (
                 <table className="data-table">
                     <thead>
                     <tr>
@@ -152,7 +122,7 @@ export function AdminUsersPage() {
                     </thead>
 
                     <tbody>
-                    {filteredUsers.map((user: UserResponse, index: number) => (
+                    {users.map((user: UserResponse, index: number) => (
                         <tr key={user.id}>
                             <td>{page * size + index + 1}</td>
                             <td>{getFullName(user)}</td>

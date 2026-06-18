@@ -5,11 +5,18 @@ import { fetchAdminUserTasks, removeAdminTask } from '../api/adminTasksApi'
 import { resolveApiErrorMessage } from '../api/httpClient'
 import { PaginationControls } from '../components/pagination/PaginationControls'
 import { ROUTES } from '../config/routes'
-import { TASK_PRIORITIES, TASK_STATUSES } from '../schemas/taskSchemas'
-import type { TaskListItemResponse, TaskPriority, TaskStatus } from '../types/task'
+import type { TaskListItemResponse } from '../types/task'
 
-type TaskPriorityFilter = 'ALL' | TaskPriority
-type TaskStatusFilter = 'ALL' | TaskStatus
+const TASK_SORT_OPTIONS = [
+    { label: 'ID ↑', value: 'id,asc' },
+    { label: 'ID ↓', value: 'id,desc' },
+    { label: 'Name ↑', value: 'name,asc' },
+    { label: 'Name ↓', value: 'name,desc' },
+    { label: 'Priority ↑', value: 'priority,asc' },
+    { label: 'Priority ↓', value: 'priority,desc' },
+    { label: 'Status ↑', value: 'status,asc' },
+    { label: 'Status ↓', value: 'status,desc' },
+]
 
 export function AdminUserTasksPage() {
     const { userId } = useParams()
@@ -20,17 +27,15 @@ export function AdminUserTasksPage() {
 
     const [page, setPage] = useState(0)
     const [size, setSize] = useState(20)
-    const [searchValue, setSearchValue] = useState('')
-    const [priorityFilter, setPriorityFilter] = useState<TaskPriorityFilter>('ALL')
-    const [statusFilter, setStatusFilter] = useState<TaskStatusFilter>('ALL')
+    const [sort, setSort] = useState('id,asc')
 
     const pageRequest = useMemo(
         () => ({
             page,
             size,
-            sort: 'id,asc',
+            sort,
         }),
-        [page, size],
+        [page, size, sort],
     )
 
     const {
@@ -44,7 +49,6 @@ export function AdminUserTasksPage() {
     })
 
     const tasks = tasksPage?.content ?? []
-    const filteredTasks = filterTasks(tasks, searchValue, priorityFilter, statusFilter)
 
     const removeTaskMutation = useMutation({
         mutationFn: removeAdminTask,
@@ -60,25 +64,8 @@ export function AdminUserTasksPage() {
         setPage(0)
     }
 
-    function handleSearchChange(value: string) {
-        setSearchValue(value)
-        setPage(0)
-    }
-
-    function handlePriorityFilterChange(value: TaskPriorityFilter) {
-        setPriorityFilter(value)
-        setPage(0)
-    }
-
-    function handleStatusFilterChange(value: TaskStatusFilter) {
-        setStatusFilter(value)
-        setPage(0)
-    }
-
-    function handleClearFilters() {
-        setSearchValue('')
-        setPriorityFilter('ALL')
-        setStatusFilter('ALL')
+    function handleSortChange(nextSort: string) {
+        setSort(nextSort)
         setPage(0)
     }
 
@@ -115,15 +102,23 @@ export function AdminUserTasksPage() {
                 </div>
             </div>
 
-            <TaskFilters
-                searchValue={searchValue}
-                priorityFilter={priorityFilter}
-                statusFilter={statusFilter}
-                onSearchChange={handleSearchChange}
-                onPriorityFilterChange={handlePriorityFilterChange}
-                onStatusFilterChange={handleStatusFilterChange}
-                onClearFilters={handleClearFilters}
-            />
+            <div className="form">
+                <div className="form-field">
+                    <label htmlFor="taskSort">Sort by</label>
+                    <select
+                        id="taskSort"
+                        value={sort}
+                        disabled={isLoading}
+                        onChange={(event) => handleSortChange(event.target.value)}
+                    >
+                        {TASK_SORT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
 
             {error && <div className="error-state">{resolveApiErrorMessage(error)}</div>}
 
@@ -139,11 +134,7 @@ export function AdminUserTasksPage() {
                 <div className="empty-state">No tasks were found for this user.</div>
             )}
 
-            {!isLoading && tasks.length > 0 && filteredTasks.length === 0 && (
-                <div className="empty-state">No tasks match selected filters.</div>
-            )}
-
-            {!isLoading && filteredTasks.length > 0 && (
+            {!isLoading && tasks.length > 0 && (
                 <table className="data-table">
                     <thead>
                     <tr>
@@ -157,7 +148,7 @@ export function AdminUserTasksPage() {
                     </thead>
 
                     <tbody>
-                    {filteredTasks.map((task: TaskListItemResponse, index: number) => (
+                    {tasks.map((task: TaskListItemResponse, index: number) => (
                         <tr key={task.id}>
                             <td>{page * size + index + 1}</td>
                             <td>{task.id}</td>
@@ -198,107 +189,6 @@ export function AdminUserTasksPage() {
             />
         </section>
     )
-}
-
-interface TaskFiltersProps {
-    searchValue: string
-    priorityFilter: TaskPriorityFilter
-    statusFilter: TaskStatusFilter
-    onSearchChange: (value: string) => void
-    onPriorityFilterChange: (value: TaskPriorityFilter) => void
-    onStatusFilterChange: (value: TaskStatusFilter) => void
-    onClearFilters: () => void
-}
-
-function TaskFilters({
-                         searchValue,
-                         priorityFilter,
-                         statusFilter,
-                         onSearchChange,
-                         onPriorityFilterChange,
-                         onStatusFilterChange,
-                         onClearFilters,
-                     }: TaskFiltersProps) {
-    return (
-        <div className="form">
-            <div className="form-field">
-                <label htmlFor="taskSearch">Search</label>
-                <input
-                    id="taskSearch"
-                    type="text"
-                    value={searchValue}
-                    placeholder="Search by ID or name"
-                    onChange={(event) => onSearchChange(event.target.value)}
-                />
-            </div>
-
-            <div className="form-field">
-                <label htmlFor="priorityFilter">Priority</label>
-                <select
-                    id="priorityFilter"
-                    value={priorityFilter}
-                    onChange={(event) =>
-                        onPriorityFilterChange(event.target.value as TaskPriorityFilter)
-                    }
-                >
-                    <option value="ALL">All priorities</option>
-                    {TASK_PRIORITIES.map((priority) => (
-                        <option key={priority} value={priority}>
-                            {priority}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            <div className="form-field">
-                <label htmlFor="statusFilter">Status</label>
-                <select
-                    id="statusFilter"
-                    value={statusFilter}
-                    onChange={(event) =>
-                        onStatusFilterChange(event.target.value as TaskStatusFilter)
-                    }
-                >
-                    <option value="ALL">All statuses</option>
-                    {TASK_STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                            {formatEnumValue(status)}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            <div className="form-actions">
-                <button className="button" type="button" onClick={onClearFilters}>
-                    Clear Filters
-                </button>
-            </div>
-        </div>
-    )
-}
-
-function filterTasks(
-    tasks: TaskListItemResponse[],
-    searchValue: string,
-    priorityFilter: TaskPriorityFilter,
-    statusFilter: TaskStatusFilter,
-): TaskListItemResponse[] {
-    const search = searchValue.trim().toLowerCase()
-
-    return tasks.filter((task) => {
-        const matchesSearch =
-            !search ||
-            task.name.toLowerCase().includes(search) ||
-            String(task.id).includes(search)
-
-        const matchesPriority =
-            priorityFilter === 'ALL' || task.priority === priorityFilter
-
-        const matchesStatus =
-            statusFilter === 'ALL' || task.status === statusFilter
-
-        return matchesSearch && matchesPriority && matchesStatus
-    })
 }
 
 function formatEnumValue(value: string): string {
