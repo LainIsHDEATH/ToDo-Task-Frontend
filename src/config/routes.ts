@@ -1,6 +1,7 @@
 export const ROUTES = {
     home: '/',
     login: '/login',
+    register: '/register',
 
     createUser: '/users/new',
 
@@ -27,10 +28,6 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-    {
-        label: 'Home',
-        path: ROUTES.home,
-    },
     {
         label: 'My Tasks',
         path: ROUTES.myTasks,

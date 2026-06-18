@@ -15,6 +15,7 @@ import { MyTasksPage } from './pages/MyTasksPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { UpdateMyTaskPage } from './pages/UpdateMyTaskPage'
+import { RegisterPage } from "./pages/RegisterPage.tsx";
 
 function App() {
     return (
@@ -24,6 +25,7 @@ function App() {
 
                 <Route element={<PublicOnlyRoute />}>
                     <Route path={ROUTES.login} element={<LoginPage />} />
+                    <Route path={ROUTES.register} element={<RegisterPage />} />
                 </Route>
 
                 <Route path={ROUTES.createUser} element={<CreateUserPage />} />

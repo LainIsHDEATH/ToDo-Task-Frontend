@@ -113,6 +113,10 @@ export function LoginPage() {
                     >
                         {loginMutation.isPending ? 'Logging in...' : 'Login'}
                     </button>
+
+                    <Link className="button" to={ROUTES.register}>
+                        Register
+                    </Link>
                 </div>
             </form>
         </section>
